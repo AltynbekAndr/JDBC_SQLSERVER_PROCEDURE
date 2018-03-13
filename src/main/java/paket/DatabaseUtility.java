@@ -32,23 +32,12 @@ public class DatabaseUtility {
         Connection connection = null;
         PreparedStatement pstmt = null;
         ResultSet resultSet = null;
-        try
-        {
+        try{
             ComboPooledDataSource dataSource = DatabaseUtility.getDataSource();
             connection = dataSource.getConnection();
-            pstmt = connection.prepareStatement("SELECT * FROM blacklist");
-
-            System.out.println("The Connection Object is of Class: " + connection.getClass());
-
-            resultSet = pstmt.executeQuery();
-            while (resultSet.next())
-            {
-                System.out.println(resultSet.getString(1)+" "+resultSet.getString(2)+" "+resultSet.getString(3));
-            }
 
         }
-        catch (Exception e)
-        {
+        catch (Exception e){
             connection.rollback();
             e.printStackTrace();
         }

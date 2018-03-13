@@ -1,5 +1,6 @@
 package paket;
 
+import com.mchange.v2.c3p0.ComboPooledDataSource;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.HttpClient;
@@ -7,13 +8,9 @@ import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.select.Elements;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.sql.*;
 import java.util.ArrayList;
@@ -25,17 +22,11 @@ class MyTestThread extends Thread {
     String password;
     StringBuffer result = null;
     PrintWriter printWriter = null;
-    static final String JDBC_DRIVER = "com.microsoft.sqlserver.jdbc.SQLServerDriver";
 
     public MyTestThread(PrintWriter printWriter, String login, String password) {
         this.printWriter = printWriter;
         this.login = login;
         this.password = password;
-
-
-
-
-
 
     }
 
@@ -66,29 +57,27 @@ class MyTestThread extends Thread {
         }
 
 
-        Connection con = null;
+        Connection connection = null;
         CallableStatement cstmt = null;
-        ResultSet rs;
-
-        try {
-            Class.forName(JDBC_DRIVER);
-            System.out.println("podkluchenie k baze...");
-            String connectionUrl = "jdbc:sqlserver://217.29.21.60:6889;databaseName=KOVER-SAMOLET;user=sa;password=Afina954120";
-            con = DriverManager.getConnection(connectionUrl);
-            System.out.println("est konnect...");
-            System.out.println("sozdanie zaprosa...");
-        } catch (Exception e) {
+        try{
+            ComboPooledDataSource dataSource = DatabaseUtility.getDataSource();
+            connection = dataSource.getConnection();
+        }
+        catch (Exception e){
+            try {
+                connection.rollback();
+            } catch (SQLException e1) {
+                e1.printStackTrace();
+            }
             e.printStackTrace();
         }
 
-
-        System.out.println("GooooDBYE!");
 
         while (true) {
 
             try {
                     TimeUnit.SECONDS.sleep(1);
-                    cstmt = con.prepareCall("{call xml_parser_new(?,?)}");
+                    cstmt = connection.prepareCall("{call xml_parser_new(?,?)}");
                     cstmt.setInt(1, 548);
                     cstmt.registerOutParameter(2, Types.INTEGER);
                     cstmt.execute();
@@ -99,7 +88,8 @@ class MyTestThread extends Thread {
                         result.append(line);
                     }*/
                     if (cstmt.getString(2).equals("1")) {
-                        printWriter.println(result.toString());
+                        System.out.println("cstmt.getString(2) :"+cstmt.getString(2));
+                        printWriter.println(cstmt.getString(2));
                     }
 
 
@@ -109,15 +99,9 @@ class MyTestThread extends Thread {
                 }
             } catch (Exception e) {
                 e.printStackTrace();
-            } finally {
-                try {
-                    if (con != null)
-                        con.close();
-                } catch (SQLException se) {
-                    se.printStackTrace();
-                }
             }
 
         }
+
     }
 }

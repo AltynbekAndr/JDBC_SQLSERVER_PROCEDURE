@@ -1,4 +1,4 @@
-package paket;
+package paket.paket_dlya_testov;
 
 import java.sql.*;
 import java.util.concurrent.TimeUnit;
